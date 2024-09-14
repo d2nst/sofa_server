@@ -7,19 +7,19 @@ const { User } = require('../mongoose/model');
 router.post('/api/user/login', async (req, res) => {
 	const { email, password } = req.body;
 
-	const loginUser = await User.findOne({ email: email });
-	if (!loginUser._id) {
-		return res.send({
+	const loginUser = await User.findOne({ email });
+	if (!loginUser) {
+		return res.status(404).send({
 			error: true,
-			msg: '존재하지 않는 이메일',
+			msg: '가입되지 않는 이메일입니다.',
 		});
 	}
 
 	const correctPassword = await loginUser.authenticate(password);
 	if (!correctPassword) {
-		return res.send({
+		return res.status(401).send({
 			error: true,
-			msg: '비밀번호 불일치',
+			msg: '비밀번호 일치하지 않습니다.',
 		});
 	}
 
@@ -29,7 +29,6 @@ router.post('/api/user/login', async (req, res) => {
 		{
 			id: loginUser._id,
 			email: loginUser.email,
-			nickname: loginUser.nickname,
 		},
 		secret,
 		{
@@ -38,12 +37,11 @@ router.post('/api/user/login', async (req, res) => {
 			subject: 'auth',
 		}
 	);
-	res.send({
+	res.status(200).send({
 		email: loginUser.email,
-		nickname: loginUser.nickname,
 		token: token,
 		error: false,
-		msg: '로그인 성공',
+		msg: `${loginUser.name}님 안녕하세요!`,
 	});
 });
 
