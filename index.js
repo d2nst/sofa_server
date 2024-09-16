@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const axios = require('axios');
-const { user } = require('./router');
+const { user, kakao } = require('./router');
 require('dotenv').config();
 const { PORT, JWT_SECRET } = process.env;
 const port = PORT;
@@ -15,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(user);
+app.use(kakao);
 
 app.get('/', (req, res) => {
 	res.send('Server is running!');

@@ -17,6 +17,8 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.1",
-    "ngrok": "^5.0.0-beta.2"
+    "ngrok": "^5.0.0-beta.2",
+    "passport": "^0.7.0",
+    "passport-kakao": "^1.0.1"
   }
 }
