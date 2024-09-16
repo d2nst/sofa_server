@@ -29,6 +29,7 @@ router.post('/api/user/login', async (req, res) => {
 		{
 			id: loginUser._id,
 			email: loginUser.email,
+			nickname: loginUser.nickname,
 		},
 		secret,
 		{
@@ -41,18 +42,19 @@ router.post('/api/user/login', async (req, res) => {
 		email: loginUser.email,
 		token: token,
 		error: false,
-		msg: `${loginUser.name}님 안녕하세요!`,
+		msg: `${loginUser.nickname}님 안녕하세요!`,
 	});
 });
 
 // 사용자 추가
 router.post('/api/user/create', async (req, res) => {
-	const { name, email, password } = req.body;
-	console.log(req.body);
+	const { name, email, password, nickname, address } = req.body;
 	const newUser = await User({
 		email,
 		name,
 		password,
+		nickname,
+		address,
 	}).save();
 
 	res.send(newUser._id ? true : false);
@@ -72,7 +74,6 @@ router.get('/api/user/token', (req, res) => {
 		}
 		res.send({
 			email: data.email,
-			nickname: data.nickname,
 		});
 	});
 });
