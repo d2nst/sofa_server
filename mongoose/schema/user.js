@@ -5,14 +5,16 @@ require('dotenv').config();
 const { SALTSECRET } = process.env;
 
 const UserSchema = new Schema({
-	email: { type: String, required: true, unique: true },
-	hashedPassword: { type: String, required: true },
-	salt: { type: String, required: true },
+	provider: { type: String, default: 'local' },
+	snsId: { type: String },
+	email: { type: String },
+	hashedPassword: { type: String },
+	salt: { type: String },
 	createdAt: { type: Date, default: Date.now, required: true },
-	name: { type: String, required: true, unique: false },
-	nickname: { type: String, required: true, unique: true },
-	address: { type: String, required: true, unique: false },
-	profileimage: { type: String, require: false },
+	name: { type: String, unique: false },
+	nickname: { type: String, unique: true },
+	address: { type: String },
+	profileimage: { type: String },
 });
 
 // password는 가상 선택자

@@ -11,9 +11,10 @@ const SECRET = JWT_SECRET;
 // JWT 시크릿 설정
 app.set('jwt-secret', SECRET);
 
-app.use(cors());
+app.use(cors({ exposedHeaders: ['Authorization'], credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(user);
 app.use(kakao);
 

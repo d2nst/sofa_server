@@ -40,12 +40,20 @@ router.post('/api/user/login', async (req, res) => {
 			subject: 'auth',
 		}
 	);
-	res.status(200).send({
-		email: loginUser.email,
-		token: token,
-		error: false,
-		msg: `${loginUser.nickname}님 안녕하세요!`,
-	});
+	res
+		.status(200)
+		.cookie('sofa_auth', token, {
+			httpOnly: true, // 클라이언트 측에서 접근 불가 개발에서 false 배포에서 ture
+			sameSite: 'none', // CSRF 공격 방지 개발에서 none 배포 strict
+			secure: true, // HTTPS에서만 전송 개발에서 false 배포에서 process.env.NODE_ENV === 'production'
+			expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후 만료
+		})
+		.send({
+			email: loginUser.email,
+			// token: token,
+			error: false,
+			msg: `${loginUser.nickname}님 안녕하세요!`,
+		});
 });
 
 // 사용자 추가
@@ -109,7 +117,7 @@ router.get('/api/user/token', (req, res) => {
 			res.send(err);
 		}
 		res.send({
-			email: data.email,
+			nickname: data.nickname,
 		});
 	});
 });

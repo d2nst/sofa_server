@@ -4,6 +4,7 @@ const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const { User } = require('../mongoose/model');
 const { KAKAO_REDIRECT_URI, KAKAO_REST_KEY } = process.env;
+
 // 카카오 요청
 router.post('/auth/kakao/callback', async (req, res) => {
 	const { authorizationCode } = req.body;
@@ -37,22 +38,22 @@ router.post('/auth/kakao/callback', async (req, res) => {
 		} = kakaoUser;
 
 		// 사용자 정보 저장/업데이트
-		// let user = await User.findOne({ kakaoId: id });
-		// if (!user) {
-		// 	user = new User({
-
-		// 		nickname,
-		// 		email,
-		// 	});
-		// 	await user.save();
-		// }
+		let user = await User.findOne({ snsId: id, provider: 'kakao' });
+		if (!user) {
+			user = new User({
+				provider: 'kakao',
+				snsId: id,
+				nickname,
+				profileimage: profile_image,
+			});
+			await user.save();
+		}
 
 		// JWT 생성
 		const token = jwt.sign(
 			{
-				id: id,
-				// email: email,
-				nickname: nickname,
+				id,
+				nickname,
 			},
 			secret,
 			{
@@ -63,15 +64,21 @@ router.post('/auth/kakao/callback', async (req, res) => {
 		);
 
 		// 클라이언트로 사용자 정보와 JWT 반환
-		res.json({
-			token,
-			user: {
-				id: id,
-				nickname: nickname,
-				// email: user.email,
-				image: profile_image,
-			},
-		});
+		res
+			.status(200)
+			.cookie('sofa_auth', token, {
+				httpOnly: false, // 클라이언트 측에서 접근 불가 개발에서 false 배포에서 ture
+				sameSite: 'lax', // CSRF 공격 방지 개발에서 none 배포 strict
+				secure: false, // HTTPS에서만 전송 개발에서 false 배포에서 process.env.NODE_ENV === 'production'
+				expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후 만료
+			})
+			.json({
+				user: {
+					id,
+					nickname,
+					image: profile_image,
+				},
+			});
 	} catch (error) {
 		console.error('Kakao login error:', error);
 		res.status(500).json({ message: '카카오 로그인 실패' });
