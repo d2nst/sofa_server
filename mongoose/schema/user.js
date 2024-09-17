@@ -12,6 +12,7 @@ const UserSchema = new Schema({
 	name: { type: String, required: true, unique: false },
 	nickname: { type: String, required: true, unique: true },
 	address: { type: String, required: true, unique: false },
+	profileimage: { type: String, require: false },
 });
 
 // password는 가상 선택자
@@ -37,4 +38,5 @@ UserSchema.method('authenticate', function (plainPassword) {
 	return inputPassword === this.hashedPassword;
 });
 
-module.exports = mongoose.model('User', UserSchema);
+const User = mongoose.model('User', UserSchema);
+module.exports = User;
