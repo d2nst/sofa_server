@@ -1,21 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const jwt = require('jsonwebtoken');
+const { login } = require('../controller/authController');
 const { User } = require('../mongoose/model');
-const { KAKAO_REDIRECT_URI, KAKAO_REST_KEY } = process.env;
+const { KAKAO_REDIRECT_URI, KAKAO_REST_KEY, FRONT_HOST } = process.env;
 
 // 카카오 요청
 router.post('/auth/kakao/callback', async (req, res) => {
 	const { authorizationCode } = req.body;
 	const code = authorizationCode;
-	const secret = req.app.get('jwt-secret');
+	console.log('code: ', code);
+
 	try {
 		const tokenResponse = await axios.post('https://kauth.kakao.com/oauth/token', null, {
 			params: {
 				grant_type: 'authorization_code',
 				client_id: KAKAO_REST_KEY,
-				redirect_uri: `http://localhost:5173${KAKAO_REDIRECT_URI}`,
+				redirect_uri: `${FRONT_HOST}${KAKAO_REDIRECT_URI}`,
 				code,
 			},
 			headers: {
@@ -23,11 +24,11 @@ router.post('/auth/kakao/callback', async (req, res) => {
 			},
 		});
 
-		const accessToken = tokenResponse.data.access_token;
+		const kakkoAccessToken = tokenResponse.data.access_token;
 		// 액세스 토큰으로 사용자 정보 요청
 		const userResponse = await axios.get('https://kapi.kakao.com/v2/user/me', {
 			headers: {
-				Authorization: `Bearer ${accessToken}`,
+				Authorization: `Bearer ${kakkoAccessToken}`,
 			},
 		});
 
@@ -48,37 +49,7 @@ router.post('/auth/kakao/callback', async (req, res) => {
 			});
 			await user.save();
 		}
-
-		// JWT 생성
-		const token = jwt.sign(
-			{
-				id,
-				nickname,
-			},
-			secret,
-			{
-				expiresIn: '7d',
-				issuer: 'sofa',
-				subject: 'auth',
-			}
-		);
-
-		// 클라이언트로 사용자 정보와 JWT 반환
-		res
-			.status(200)
-			.cookie('sofa_auth', token, {
-				httpOnly: false, // 클라이언트 측에서 접근 불가 개발에서 false 배포에서 ture
-				sameSite: 'lax', // CSRF 공격 방지 개발에서 none 배포 strict
-				secure: false, // HTTPS에서만 전송 개발에서 false 배포에서 process.env.NODE_ENV === 'production'
-				expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후 만료
-			})
-			.json({
-				user: {
-					id,
-					nickname,
-					image: profile_image,
-				},
-			});
+		login(req, res, user);
 	} catch (error) {
 		console.error('Kakao login error:', error);
 		res.status(500).json({ message: '카카오 로그인 실패' });

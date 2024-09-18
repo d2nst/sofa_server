@@ -4,14 +4,14 @@ const cors = require('cors');
 const axios = require('axios');
 const { user, kakao } = require('./router');
 require('dotenv').config();
-const { PORT, JWT_SECRET } = process.env;
+const { PORT, JWT_SECRET, FRONT_HOST } = process.env;
 const port = PORT;
 const SECRET = JWT_SECRET;
 
 // JWT 시크릿 설정
 app.set('jwt-secret', SECRET);
 
-app.use(cors({ exposedHeaders: ['Authorization'], credentials: true }));
+app.use(cors({ origin: FRONT_HOST, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

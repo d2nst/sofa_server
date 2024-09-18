@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const { User } = require('../mongoose/model');
+const { login, refreshToken } = require('../controller/authController');
 
 // 로그인 요청
 router.post('/api/user/login', async (req, res) => {
@@ -25,35 +26,7 @@ router.post('/api/user/login', async (req, res) => {
 		});
 	}
 
-	const secret = req.app.get('jwt-secret');
-
-	const token = jwt.sign(
-		{
-			id: loginUser._id,
-			email: loginUser.email,
-			nickname: loginUser.nickname,
-		},
-		secret,
-		{
-			expiresIn: '7d',
-			issuer: 'sofa',
-			subject: 'auth',
-		}
-	);
-	res
-		.status(200)
-		.cookie('sofa_auth', token, {
-			httpOnly: true, // 클라이언트 측에서 접근 불가 개발에서 false 배포에서 ture
-			sameSite: 'none', // CSRF 공격 방지 개발에서 none 배포 strict
-			secure: true, // HTTPS에서만 전송 개발에서 false 배포에서 process.env.NODE_ENV === 'production'
-			expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후 만료
-		})
-		.send({
-			email: loginUser.email,
-			// token: token,
-			error: false,
-			msg: `${loginUser.nickname}님 안녕하세요!`,
-		});
+	login(req, res, loginUser);
 });
 
 // 사용자 추가
@@ -105,23 +78,7 @@ router.post('/api/user/create', (req, res) => {
 });
 
 // 사용자 토큰 체크
-router.get('/api/user/token', (req, res) => {
-	const { authorization } = req.headers;
-	if (!authorization) {
-		return res.send(false);
-	}
-	const token = authorization.split(' ')[1];
-	const secret = req.app.get('jwt-secret');
-	jwt.verify(token, secret, (err, data) => {
-		if (err) {
-			res.send(err);
-		}
-		res.send({
-			nickname: data.nickname,
-		});
-	});
-});
-
+router.get('/api/user/token', refreshToken);
 // 사용자 정보 변경
 
 // 사용자 삭제
